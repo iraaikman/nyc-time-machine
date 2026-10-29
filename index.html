@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f4f1e9" />
+    <meta
+      name="description"
+      content="Walk into New York's past. Explore the NYPL photo archive on a map and align historic views with today's streets."
+    />
+    <title>NYC Time Machine — A city, across time</title>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="./"
+        ><span class="brand-mark">N<span>↗</span></span
+        ><span>NYC Time Machine<small>A CITY, ACROSS TIME</small></span></a
+      >
+      <nav>
+        <button id="about-btn" class="text-btn">About the archive</button
+        ><button id="tour-btn">
+          ♡ <span>Favourites</span> <b id="fav-count">0</b>
+        </button>
+      </nav>
+    </header>
+    <main>
+      <div id="map" aria-label="Historic photo map of New York"></div>
+      <section class="map-tools" aria-label="Explore filters">
+        <div class="eyebrow">THE FIVE BOROUGHS · 1870–1979</div>
+        <h1>
+          Every corner<br />
+          has a past.
+        </h1>
+        <p>Find a place. Slide through time.</p>
+        <label class="search"
+          ><span aria-hidden="true">⌕</span
+          ><input
+            id="search"
+            type="search"
+            placeholder="Search a street, place, or story…"
+            aria-label="Search historic photos"
+          /><kbd>/</kbd></label
+        >
+        <div class="date-label">
+          <label for="decade">Explore a decade</label
+          ><output id="decade-label">All years</output>
+        </div>
+        <input
+          id="decade"
+          type="range"
+          min="1860"
+          max="1970"
+          step="10"
+          value="1860"
+          aria-label="Decade, first position is all years"
+        />
+        <div class="range-labels">
+          <span>All years</span><span>1920s</span><span>1970s</span>
+        </div>
+        <label class="unknown"
+          ><input id="unknown" type="checkbox" checked /> Include undated
+          photographs</label
+        >
+        <div class="filter-foot">
+          <span class="dot"></span
+          ><span id="count" role="status">Opening the archive…</span
+          ><button id="reset" class="text-btn">Reset</button>
+        </div>
+      </section>
+      <div class="map-caption">
+        <span class="dot"></span> A photograph once stood here
+        <span class="caption-extra">· Select a marker to look back</span>
+      </div>
+      <aside id="panel" hidden aria-label="Historic photograph details"></aside>
+      <div class="map-legend">
+        NEW YORK CITY<br /><span>40°42′ N &nbsp; 74°00′ W</span>
+      </div>
+    </main>
+    <dialog id="about">
+      <button class="close" data-close="about" aria-label="Close">×</button>
+      <div class="eyebrow">AN OPEN WINDOW INTO THE PAST</div>
+      <h2>A city, across time.</h2>
+      <p>
+        Explore the New York Public Library’s
+        <em>Photographic Views of New York City, 1870s–1970s</em>, mapped by
+        OldNYC. The archive includes earlier and later records; use All years to
+        see everything.
+      </p>
+      <p>
+        Historic photographs from The New York Public Library. Images load
+        directly from NYPL. Coordinates and transcriptions come from OldNYC and
+        may contain errors.
+      </p>
+      <p>
+        Present-day street imagery is provided by Mapillary contributors and may
+        be several years old. A viewpoint and date are always shown when
+        available. Alignment works best on a single flat building façade.
+      </p>
+      <p>
+        <a href="https://www.nypl.org/" target="_blank" rel="noreferrer"
+          >The New York Public Library ↗</a
+        >
+        ·
+        <a href="https://www.oldnyc.org/" target="_blank" rel="noreferrer"
+          >OldNYC ↗</a
+        >
+        ·
+        <a href="https://www.mapillary.com/" target="_blank" rel="noreferrer"
+          >Mapillary ↗</a
+        >
+      </p>
+      <button id="settings-btn">Set Mapillary token</button>
+      <p class="muted">
+        Your favourites and alignment points stay in this browser. Export a
+        backup to keep them.
+      </p>
+    </dialog>
+    <dialog id="settings">
+      <button class="close" data-close="settings" aria-label="Close">×</button>
+      <div class="eyebrow">PRESENT-DAY STREET VIEWS</div>
+      <h2>Connect Mapillary.</h2>
+      <p>
+        Enter a free Mapillary <strong>client access token</strong>. This is a
+        public browser token, never your client secret. Or configure
+        MAPILLARY_TOKEN in .env before starting the app.
+      </p>
+      <form id="token-form">
+        <label
+          >Client token<input
+            id="token"
+            type="password"
+            autocomplete="off"
+            placeholder="MLY|…"
+            required /></label
+        ><button class="primary">Use token for this session</button>
+      </form>
+      <p>
+        <a
+          href="https://www.mapillary.com/dashboard/developers"
+          target="_blank"
+          rel="noreferrer"
+          >Get a free client token ↗</a
+        >
+      </p>
+    </dialog>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
