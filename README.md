@@ -1,130 +1,90 @@
 # NYC Time Machine
 
-Explore 49,101 historic New York photographs at 9,007 locations. Find a street on the map, browse nearby Mapillary camera views, find shared landmarks, and align a compatible pair. Nearby images are candidates, not verified viewpoint matches.
+Explore **49,101 historic views at 9,007 mapped locations** from the New York Public Library and OldNYC. Choose a map pin or a street, browse its decades, and open photographs in a large viewer. Save individual historic photos to your own collection.
 
-Static Vite + vanilla JavaScript, Leaflet, MarkerCluster and free OpenStreetMap tiles. No backend, Google services, paid APIs, or image uploads. Internet access is needed for map tiles and photographs. Favourites stay in your browser.
+The app is a static Vite + vanilla JavaScript site using Leaflet, MarkerCluster and OpenStreetMap. It needs no account, API token or backend. Internet access is needed for map tiles and archive photographs.
 
-## Run it locally
+## Run locally
 
-1. Install **Node.js 22 or newer** (the LTS version) from https://nodejs.org. Python 3 is only needed if you want to refresh the archive.
-2. Download or clone this project, then open a terminal in the `nyc-time-machine` folder.
-3. On the first run, enter:
-
-   ```sh
-   npm install
-   ```
-
-4. Start the app with one command:
-
-   ```sh
-   npm run dev
-   ```
-
-5. Open the Local address printed in the terminal (usually http://localhost:5173). Keep the terminal open. Press Ctrl+C to stop.
-
-The photo map works immediately. The archive metadata is already included; there is no first-run download script to run.
-
-## Get a free Mapillary token
-
-1. Sign in or create a free account at https://www.mapillary.com/.
-2. Open https://www.mapillary.com/dashboard/developers and register an application. Give it a name such as “NYC Time Machine.” If requested, enter your local or published website address.
-3. Copy the **client access token**. Do not copy your client secret or use a private server token.
-4. Copy `.env.example` to a new file named `.env` in this project folder. On macOS/Linux you can use `cp .env.example .env`; Windows PowerShell: `Copy-Item .env.example .env`.
-5. Open `.env` in a text editor and set:
-
-   ```dotenv
-   MAPILLARY_TOKEN=your_public_client_access_token
-   ```
-
-6. Restart `npm run dev` if it was already running. Select a map pin and choose **Then / Now**.
-
-Alternatively, choose **Token settings** in the comparison, or **About the archive → Set Mapillary token**, and paste your client token. This override lasts for the page session and is not saved in localStorage. Mobile users can reach Token settings from any photo’s Then / Now view.
-
-A third configuration option is an untracked `public/config.json` file:
-
-```json
-{"MAPILLARY_TOKEN":"your_public_client_access_token"}
-```
-
-Priority: session override, `.env` at build time, then `config.json`. A static site necessarily exposes its client token in the browser. `.env` and `public/config.json` are ignored by Git to avoid accidental commits, but a token supplied during a production build is included in the built app. Never put a client secret here. Use Mapillary’s available application restrictions and rotate your client token in its dashboard if necessary.
-
-## Explore and align
-
-- Click a cluster to zoom in, then a small terracotta pin to open photographs at that spot. Use the panel arrows to browse other photos at the same coordinates.
-- Search street names, titles and back-of-photo transcription text. Press `/` to focus search. Search and decade filters affect the full archive; pan or zoom to find matching pins outside your current map view.
-- The decade slider has **All years**, then 1870s through 1970s. Undated photos have their own checkbox. Dates outside this range appear under All years. A date range in the source is represented by its first known year, so a decade is approximate.
-- Choose **Then / Now**. Photos start **side by side** so you can check whether they show the same façade. The thumbnail picker shows nearby camera views; choose one directly rather than stepping blindly through angles. Search within **50, 100 or 200 metres** of the archive pin.
-- **Browse views by** sorts candidates toward the archive pin (an estimate), by distance, or by your chosen compass direction. The pin may locate the subject rather than the historic photographer. Heading and distance cannot establish a matching viewpoint. Search results are limited to the API’s first 500 candidates; a larger radius does not guarantee complete coverage. Street imagery shows its capture year and may be several years old.
-- Find shared corners and windows before choosing **Align shared landmarks**. Rooftop views, interiors, demolished buildings and photos without common visible features may have no usable street-level match. Try another historic photo when the scene does not overlap.
-- **Overlay preview** lets you inspect an unaligned pair; it does not automatically align the images. Saved alignments reopen as overlays. **Side by side** shows the original photos without the perspective transform.
-- Drag the divider, use **Reveal** with the keyboard, or change **Old photo opacity** to fade the historic photograph.
-- Choose **Align shared landmarks**. Click four distinct landmarks around a flat façade in the old image, clockwise from the top left. Then click the corresponding four landmarks in the new image, in the same order. Use corners and windows spread across the façade. Click **Apply & save alignment**.
-- The browser computes a homography and applies a CSS perspective transform. It rejects degenerate selections. One planar transform cannot match every depth in a street scene; try another Mapillary angle if needed.
-- **Favourites** lists your aligned pairs. Open one, or choose **Play full-screen tour** and use its arrows. Native full-screen is requested where supported; otherwise the tour still fills the app viewport (including iPhones).
-- **Export JSON** downloads a backup with IDs and normalized landmark coordinates, never images or temporary thumbnail URLs. **Import JSON** validates and merges a backup; matching photo/image pairs are replaced. Removing a favourite only removes the local alignment.
-
-Clearing browser data removes your collection. Export it regularly. The JSON format is `{ "version": 1, "pairs": [{ "photoId": "…", "mapillaryId": "…", "oldPoints": [[x,y],…], "newPoints": [[x,y],…] }] }`, with exactly four points per image, each coordinate between 0 and 1.
-
-## Deploy free to GitHub Pages from main
-
-The published static app is built into the tracked `docs` folder. GitHub Pages can serve it directly from the **main** branch, with no paid hosting or deployment service.
-
-1. Push this project to https://github.com/iraaikman/nyc-time-machine on the `main` branch. Include `docs`, `.github/workflows/pages.yml`, `package-lock.json`, and `public/data/photos.json`. Do not upload `node_modules`, `.env`, or `dist`.
-2. Open the repository’s **Settings → Pages**.
-3. Under **Build and deployment**, choose **Deploy from a branch**.
-4. Select **main** and **/docs**, then click **Save**.
-5. GitHub will publish the app at https://iraaikman.github.io/nyc-time-machine/. The Pages settings and repository’s Actions tab show publication progress.
-
-The included workflow checks tests and the production build on pushes to `main`. GitHub’s own Pages workflow publishes the committed `docs` folder.
-
-### Update the published app
-
-After changing the source, rebuild the static files before pushing:
+Use Node.js 22 or newer:
 
 ```sh
+npm ci
+npm run dev
+```
+
+Open the Local address printed in the terminal. The complete archive metadata is bundled in `public/data/photos.json`; no initial download script is necessary. Python 3 is only needed to refresh that metadata.
+
+## Explore the archive
+
+- The opening collection follows **the Bowery in the 1930s**, with every available decade one click away. Use the starter streets, search for another street, or select **All New York** to explore the whole map.
+- Street search understands common abbreviations and spelled-out numbered streets, such as “Fifth Ave.” Choose a street suggestion to browse that street within its borough. Enter opens a uniquely matched street, or searches titles and transcriptions if there is no unique street match. The final suggestion always searches all titles and transcriptions.
+- Map pins follow the active street, search, decade or favourites collection. Click a cluster to zoom, then a pin to browse photographs at that corner. **Follow [street]** expands the collection to an adjoining street. **At this corner** narrows it again.
+- The decade buttons show the actual periods represented in the collection, including dates outside the main 1870s–1970s archive. **All years** sorts known dates first and undated photos last. **Undated** has its own filter.
+- Select thumbnails or use the arrows to browse in date order. The map highlights the selected photo’s archive location. **Locate on map** zooms to that location.
+- Select **View larger** for a full-window photograph. Use its arrows or your keyboard’s left/right arrows to browse. **Zoom in** lets you scroll around details; **Fit photograph** resets the view. Escape closes the viewer.
+- **Notes from the archive** shows the available transcription. **Original NYPL record** opens the authoritative source, including its rights and any additional image/download options. Displayed detail is limited by the source image’s resolution.
+- The address bar preserves the current photo, street and decade, so a copied link can reopen the same view. Favourites links depend on the recipient’s browser collection.
+
+### Dates and street groupings
+
+Street collections are derived from structured archive captions, such as `Manhattan: Bowery - Grand Street`. Common street abbreviations and ordinal numbers are normalized, while boroughs and East/West street names remain distinct. Other photos at the same archive coordinates join the streets identified there. An unrecognized caption remains accessible by map location and text search. Collections can therefore include adjoining places or subjects photographed from that corner; these are archive locations, not surveyed camera positions.
+
+The upstream year may be approximate or may refer to a building’s history. When a transcription ends with an unambiguous standalone month/day/year date line, the app uses that year for browsing and retains the original year in memory as provenance. It leaves conflicting date lines and dates embedded in prose alone. Other years display with **c.** to indicate an approximate archive date. Transcriptions can contain errors; consult the NYPL record for research requiring precise dating. Undated photographs are never assigned a guessed year.
+
+## Favourites and backups
+
+**Save photo** stores a photo ID in this browser. Open **Favourites** to browse saved photos by decade, remove them, export a backup or import one. No images are uploaded or stored in the backup.
+
+Historic photo IDs from the previous version’s saved alignments are carried over when there is no newer favourites store. The previous store remains untouched. Imports support both the new format and version 1 alignment exports; duplicates are merged and unknown or malformed photo IDs are rejected.
+
+```json
+{
+  "version": 2,
+  "type": "historic-photos",
+  "photoIds": ["716777f-a"]
+}
+```
+
+Clearing browser data removes your favourites. Export a backup to keep your collection. The app reports storage errors rather than claiming a photo has been saved.
+
+## Deploy to GitHub Pages
+
+The tracked `docs` folder contains the complete production build. To update the published site:
+
+```sh
+npm test
 npm run build:pages
 git add .
-git commit -m "Update NYC Time Machine"
+git commit -m "Make NYC Time Machine an historic photo explorer"
 git push origin main
 ```
 
-To give all visitors access to Mapillary comparisons, set your **public client access token** in the ignored `.env` file before running `npm run build:pages`. The build embeds that public token in the browser app. Never use a client secret. Without a configured token, visitors can enter their own token in the app’s Token settings.
+In the repository’s **Settings → Pages**, use **Deploy from a branch**, branch **main**, folder **/docs**. The intended address is https://iraaikman.github.io/nyc-time-machine/.
 
-The app uses relative build paths, so the repository URL works. The `docs/.nojekyll` file tells GitHub Pages to serve the generated files directly.
+The build uses relative URLs and includes `docs/.nojekyll`. Include the generated assets and `docs/data/photos.json` when publishing; do not upload `node_modules`, `.git`, or local environment files. No service credentials are required. For another static host, use `npm run build` and upload `dist`. Use an HTTP server or `npm run preview`; opening the HTML directly with a `file://` URL does not allow the archive fetch.
 
-For another static host, run `npm run build` and upload the contents of `dist`. Use `npm run preview` to check that build locally. Do not open `docs/index.html` or `dist/index.html` directly with a `file://` URL; the browser must fetch the archive over HTTP.
-
-## Refresh the archive
-
-The standard-library Python script downloads the current OldNYC metadata and converts it to a compact JSON array:
+## Refresh the metadata
 
 ```sh
 python3 scripts/download_data.py
 ```
 
-Each record includes `id`, `lat`, `lon`, `title`, nullable `year`, `image`, `nypl`, and `text`. Invalid coordinates and duplicate IDs are skipped. Missing dates are kept as `null`; missing transcription text is an empty string. To convert an existing download, use `--input /path/to/data.json`. Use `--output /path/to/photos.json` for a different destination. The script writes atomically so a failed download does not replace the existing archive.
+The standard-library Python script downloads OldNYC metadata and converts it to the bundled JSON array. It skips duplicate IDs and invalid coordinates, retains undated records, and writes atomically. To convert an existing download, use `--input /path/to/data.json`; use `--output` to choose a destination.
 
-Metadata source: https://github.com/oldnyc/oldnyc.github.io/blob/master/data.json. Original project: https://github.com/danvk/oldnyc. The bundled metadata is about 27 MB uncompressed, so the first load may take a moment on mobile connections. No historic images are bundled or re-hosted: the app uses source URLs on NYPL’s image servers and OldNYC’s rotated-image archive.
-
-## How the Mapillary integration works
-
-Graph API v4’s `/images` spatial search uses a **bounding box**, rather than a `lat/lng/radius` query. The app builds a box around the archive coordinates, requests `id,thumb_2048_url,captured_at,compass_angle,geometry`, then uses great-circle distance to enforce the selected 50, 100 or 200 m radius. It requests up to 500 candidates per search. Default sorting estimates whether each camera faces the archive pin using its position and compass heading, with distance as a secondary preference. Cameras within 8 m of the pin have an ambiguous bearing and are demoted; missing headings sort last. You can instead sort by distance or a chosen compass direction. None of these heuristics verifies the historic camera position or image overlap.
-
-Each selected image is fetched again by ID with `cache: no-store`, including when reopening a favourite. Expiring thumbnail URLs are never persisted. A missing token, rejected token, empty result, API failure or failed image load is reported in the comparison. Tests use API fixtures; no live token is included in this project.
-
-The public OpenStreetMap tile service is for normal interactive use, subject to https://operations.osmfoundation.org/policies/tiles/. Do not bulk-download tiles or add offline tile prefetching. If you grow beyond that service’s usage policy, change the tile URL and attribution in `src/main.js` to an appropriate provider. Some shared/cloud development networks are blocked by the tile service; test from your own browser.
+Metadata source: https://github.com/oldnyc/oldnyc.github.io/blob/master/data.json. Original project: https://github.com/danvk/oldnyc. The metadata is about 27 MB uncompressed. Photographs load directly from NYPL and OldNYC’s image hosts; they are not re-hosted in this repository.
 
 ## Checks
 
 ```sh
 npm test
-npm run build
+npm run build:pages
 ```
 
-Tests cover archive integrity, perspective geometry, degenerate selections, import validation, radius filtering, direction ranking, heading wraparound, invalid camera coordinates, fresh image URLs and authentication failures.
+Tests cover archive integrity, street alias normalization, borough and directional separation, intersection membership, chronological filters, date-line evidence, legacy favourites migration and backup validation. Browser checks cover map/street navigation, decades, large photographs, zoom, favourites and responsive layouts.
 
-## Credits and limits
+## Credits
 
-Historic photographs: **The New York Public Library**, “Photographic Views of New York City, 1870s–1970s,” located and transcribed by **OldNYC**. Each photo links to its original NYPL record. Refer to that record for rights and reuse information. Present-day photographs: **Mapillary contributors**, with a link to each selected image. Basemap: **OpenStreetMap contributors**. Credits are visible alongside the images and on the map.
+Historic images: **The New York Public Library**, *Photographic Views of New York City, 1870s–1970s*, located and transcribed by **OldNYC**. This archive also includes illustrations and other historical material. Refer to each NYPL record for rights and reuse information.
 
-Source coordinates, OCR, dates, and street-view headings can be imperfect. Mapillary coverage varies. A flat façade usually aligns well; streets with many depths, panoramic lens distortion, changed buildings, or different camera positions cannot be perfectly matched with a single homography. This app does not claim a surveyed or exact camera alignment.
+Basemap: **OpenStreetMap contributors**. The public tile service is for normal interactive use under https://operations.osmfoundation.org/policies/tiles/. Do not bulk-download or prefetch tiles. Image availability, dates, captions and coordinates depend on the source archives.
