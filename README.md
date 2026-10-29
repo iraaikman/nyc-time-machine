@@ -1,6 +1,6 @@
 # NYC Time Machine
 
-Explore 49,101 historic New York photographs at 9,007 locations. Find a street on the map, compare a historic photo with a nearby Mapillary view, and align the two using four matching landmarks.
+Explore 49,101 historic New York photographs at 9,007 locations. Find a street on the map, browse nearby Mapillary camera views, find shared landmarks, and align a compatible pair. Nearby images are candidates, not verified viewpoint matches.
 
 Static Vite + vanilla JavaScript, Leaflet, MarkerCluster and free OpenStreetMap tiles. No backend, Google services, paid APIs, or image uploads. Internet access is needed for map tiles and photographs. Favourites stay in your browser.
 
@@ -53,9 +53,12 @@ Priority: session override, `.env` at build time, then `config.json`. A static s
 - Click a cluster to zoom in, then a small terracotta pin to open photographs at that spot. Use the panel arrows to browse other photos at the same coordinates.
 - Search street names, titles and back-of-photo transcription text. Press `/` to focus search. Search and decade filters affect the full archive; pan or zoom to find matching pins outside your current map view.
 - The decade slider has **All years**, then 1870s through 1970s. Undated photos have their own checkbox. Dates outside this range appear under All years. A date range in the source is represented by its first known year, so a decade is approximate.
-- Choose **Then / Now**. The nearest Mapillary image within **50 metres** appears first. The arrows step through nearby images ordered by compass angle; the distance, heading and capture date help you choose. “Now” means the latest available street imagery for the selected image, not a live view.
+- Choose **Then / Now**. Photos start **side by side** so you can check whether they show the same façade. The thumbnail picker shows nearby camera views; choose one directly rather than stepping blindly through angles. Search within **50, 100 or 200 metres** of the archive pin.
+- **Browse views by** sorts candidates toward the archive pin (an estimate), by distance, or by your chosen compass direction. The pin may locate the subject rather than the historic photographer. Heading and distance cannot establish a matching viewpoint. Search results are limited to the API’s first 500 candidates; a larger radius does not guarantee complete coverage. Street imagery shows its capture year and may be several years old.
+- Find shared corners and windows before choosing **Align shared landmarks**. Rooftop views, interiors, demolished buildings and photos without common visible features may have no usable street-level match. Try another historic photo when the scene does not overlap.
+- **Overlay preview** lets you inspect an unaligned pair; it does not automatically align the images. Saved alignments reopen as overlays. **Side by side** shows the original photos without the perspective transform.
 - Drag the divider, use **Reveal** with the keyboard, or change **Old photo opacity** to fade the historic photograph.
-- Choose **Align photographs**. Click four distinct landmarks around a flat façade in the old image, clockwise from the top left. Then click the corresponding four landmarks in the new image, in the same order. Use corners and windows spread across the façade. Click **Apply & save alignment**.
+- Choose **Align shared landmarks**. Click four distinct landmarks around a flat façade in the old image, clockwise from the top left. Then click the corresponding four landmarks in the new image, in the same order. Use corners and windows spread across the façade. Click **Apply & save alignment**.
 - The browser computes a homography and applies a CSS perspective transform. It rejects degenerate selections. One planar transform cannot match every depth in a street scene; try another Mapillary angle if needed.
 - **Favourites** lists your aligned pairs. Open one, or choose **Play full-screen tour** and use its arrows. Native full-screen is requested where supported; otherwise the tour still fills the app viewport (including iPhones).
 - **Export JSON** downloads a backup with IDs and normalized landmark coordinates, never images or temporary thumbnail URLs. **Import JSON** validates and merges a backup; matching photo/image pairs are replaced. Removing a favourite only removes the local alignment.
@@ -105,7 +108,7 @@ Metadata source: https://github.com/oldnyc/oldnyc.github.io/blob/master/data.jso
 
 ## How the Mapillary integration works
 
-Graph API v4’s `/images` spatial search uses a **bounding box**, rather than a `lat/lng/radius` query. The app builds a box around the photo coordinates, requests `id,thumb_2048_url,captured_at,compass_angle,geometry`, then uses great-circle distance to remove images outside a true 50 m circle. It requests up to 500 candidates per search. The nearest image is selected; the rest are ordered by heading.
+Graph API v4’s `/images` spatial search uses a **bounding box**, rather than a `lat/lng/radius` query. The app builds a box around the archive coordinates, requests `id,thumb_2048_url,captured_at,compass_angle,geometry`, then uses great-circle distance to enforce the selected 50, 100 or 200 m radius. It requests up to 500 candidates per search. Default sorting estimates whether each camera faces the archive pin using its position and compass heading, with distance as a secondary preference. Cameras within 8 m of the pin have an ambiguous bearing and are demoted; missing headings sort last. You can instead sort by distance or a chosen compass direction. None of these heuristics verifies the historic camera position or image overlap.
 
 Each selected image is fetched again by ID with `cache: no-store`, including when reopening a favourite. Expiring thumbnail URLs are never persisted. A missing token, rejected token, empty result, API failure or failed image load is reported in the comparison. Tests use API fixtures; no live token is included in this project.
 
@@ -118,7 +121,7 @@ npm test
 npm run build
 ```
 
-Tests cover archive integrity, perspective geometry, degenerate selections, import validation, true 50 m filtering, heading order, nearest selection, fresh image URLs and authentication failures.
+Tests cover archive integrity, perspective geometry, degenerate selections, import validation, radius filtering, direction ranking, heading wraparound, invalid camera coordinates, fresh image URLs and authentication failures.
 
 ## Credits and limits
 

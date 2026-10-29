@@ -55,3 +55,43 @@ test("authentication failures produce an actionable message", async () => {
     global.fetch = original;
   }
 });
+
+test("rank views facing the archive pin before closer views looking away", async () => {
+  const { rankImages, angleDifference, bearing } = await import("../src/mapillary.js");
+  const photo = { lat: 40.7, lon: -74 };
+  const images = [
+    { id: "away", distance: 10, compass_angle: 0, geometry: { coordinates: [-74, 40.7001] } },
+    { id: "toward", distance: 30, compass_angle: 180, geometry: { coordinates: [-74, 40.7003] } },
+    { id: "unknown", distance: 5, compass_angle: null, geometry: { coordinates: [-74, 40.70005] } },
+  ];
+  assert.deepEqual(rankImages(images, photo).map(x => x.id), ["toward", "away", "unknown"]);
+  assert.equal(rankImages(images, photo, "nearest")[0].id, "unknown");
+  assert.equal(rankImages(images, photo, "0")[0].id, "away");
+  assert.equal(angleDifference(359, 1), 2);
+  assert.equal(bearing({ lat: 40.701, lon: -74 }, photo), 180);
+  assert.equal(images[0].id, "away", "ranking must not mutate the candidate list");
+});
+
+test("wider searches include distant cameras, reject out-of-radius and invalid geometry", async () => {
+  const original = global.fetch;
+  const urls = [];
+  global.fetch = async (url) => {
+    urls.push(new URL(url));
+    return { ok: true, json: async () => ({data: [
+      { id: "near", geometry: { coordinates: [-74, 40.7001] }, thumb_2048_url: "near.jpg" },
+      { id: "far", geometry: { coordinates: [-74, 40.7012] }, thumb_2048_url: "far.jpg" },
+      { id: "outside", geometry: { coordinates: [-74, 40.703] }, thumb_2048_url: "outside.jpg" },
+      { id: "invalid", geometry: { coordinates: [-74, null] }, thumb_2048_url: "bad.jpg" },
+    ]})};
+  };
+  try {
+    const photo = { lat: 40.7, lon: -74 };
+    assert.deepEqual((await nearbyImages(photo, "test", undefined, 50)).images.map(x => x.id), ["near"]);
+    assert.deepEqual((await nearbyImages(photo, "test", undefined, 200)).images.map(x => x.id), ["near", "far"]);
+    const span = (url) => { const b = url.searchParams.get("bbox").split(",").map(Number); return b[3] - b[1]; };
+    assert.ok(Math.abs(span(urls[1]) / span(urls[0]) - 4) < 0.0001);
+    await assert.rejects(() => nearbyImages(photo, "test", undefined, 5000), /radius/);
+  } finally {
+    global.fetch = original;
+  }
+});

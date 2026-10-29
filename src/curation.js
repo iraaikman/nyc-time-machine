@@ -48,6 +48,11 @@ export function setupCuration({ comparison, getPhotos, esc, onCount }) {
     $ = (s) => d.querySelector(s);
   let current = null,
     points = null;
+  d.addEventListener("pairloading", () => {
+    current = null;
+    points = null;
+    $("#save-pair").textContent = "♡ Save favourite";
+  });
   function apply(pair) {
     const old = $("#then-image");
     if (!pair) {
@@ -80,6 +85,10 @@ export function setupCuration({ comparison, getPhotos, esc, onCount }) {
           p.mapillaryId === String(current.image.id),
       ),
     );
+    if (points) {
+      comparison.setMode(true);
+      comparison.status("Saved alignment restored. Drag the divider or switch to side by side.");
+    }
     if (storageWarning) comparison.status(storageWarning);
   });
   $("#save-pair").onclick = () => {
@@ -99,6 +108,7 @@ export function setupCuration({ comparison, getPhotos, esc, onCount }) {
         pair,
       ]);
       apply(pair);
+      comparison.setMode(true);
       comparison.status(
         "Alignment saved in this browser. Export your favourites to keep a backup.",
       );
@@ -109,7 +119,7 @@ export function setupCuration({ comparison, getPhotos, esc, onCount }) {
   const alignment = document.createElement("dialog");
   alignment.id = "alignment";
   document.body.append(alignment);
-  alignment.innerHTML = `<button class="close" id="close-alignment" aria-label="Close alignment">×</button><div class="eyebrow">FOUR POINTS. ONE PERSPECTIVE.</div><h2>Bring the corners together.</h2><p>Choose four matching points around a flat façade, clockwise from the top left. Click all four on the historic photo, then the same four in the same order on the street view.</p><div class="alignment-images"><section><div class="alignment-label">01 · THEN <span>NYPL</span></div><div class="point-image" id="old-points"><img alt="Historic photograph: click four landmarks"><div class="point-layer"></div></div></section><section><div class="alignment-label">02 · NOW <span>Mapillary</span></div><div class="point-image" id="new-points"><img alt="Street view: click the four matching landmarks"><div class="point-layer"></div></div></section></div><p id="alignment-status" role="status"></p><div class="align-actions"><button id="undo-point">Undo last point</button><button id="reset-points">Start again</button><button class="primary" id="apply-alignment" disabled>Apply & save alignment</button></div><p class="muted">Perspective alignment matches one plane; moving objects, depth and lens differences may still differ. Historic: NYPL · Present: Mapillary contributors. <a id="alignment-record" target="_blank" rel="noreferrer">Original NYPL record ↗</a></p>`;
+  alignment.innerHTML = `<button class="close" id="close-alignment" aria-label="Close alignment">×</button><div class="eyebrow">FOUR SHARED LANDMARKS</div><h2>Match a visible façade.</h2><p>Choose four matching points around the same flat façade, clockwise from the top left. Click all four on the historic photo, then the same four in the same order on the street view. If you cannot find those landmarks in both photos, close this window and choose another view. Alignment cannot recreate a rooftop camera position or missing buildings.</p><div class="alignment-images"><section><div class="alignment-label">01 · THEN <span>NYPL</span></div><div class="point-image" id="old-points"><img alt="Historic photograph: click four landmarks"><div class="point-layer"></div></div></section><section><div class="alignment-label">02 · NOW <span>Mapillary</span></div><div class="point-image" id="new-points"><img alt="Street view: click the four matching landmarks"><div class="point-layer"></div></div></section></div><p id="alignment-status" role="status"></p><div class="align-actions"><button id="undo-point">Undo last point</button><button id="reset-points">Start again</button><button class="primary" id="apply-alignment" disabled>Apply & save alignment</button></div><p class="muted">Perspective alignment matches one plane; moving objects, depth and lens differences may still differ. Historic: NYPL · Present: Mapillary contributors. <a id="alignment-record" target="_blank" rel="noreferrer">Original NYPL record ↗</a></p>`;
   const a = (s) => alignment.querySelector(s);
   let oldPoints = [],
     newPoints = [];
@@ -138,8 +148,11 @@ export function setupCuration({ comparison, getPhotos, esc, onCount }) {
     a("#alignment-record").href = current.photo.nypl;
     oldPoints = points ? points.oldPoints.map((p) => [...p]) : [];
     newPoints = points ? points.newPoints.map((p) => [...p]) : [];
-    a("#old-points img").src = current.photo.image;
-    a("#new-points img").src = current.image.thumb_2048_url;
+    for (const [id, source] of [["old-points", current.photo.image], ["new-points", current.image.thumb_2048_url]]) {
+      const image = a("#" + id + " img");
+      image.onload = () => a("#" + id).style.setProperty("--point-ratio", image.naturalWidth / image.naturalHeight);
+      image.src = source;
+    }
     render();
     alignment.showModal();
   }
@@ -182,6 +195,7 @@ export function setupCuration({ comparison, getPhotos, esc, onCount }) {
         pair,
       ]);
       apply(pair);
+      comparison.setMode(true);
       alignment.close();
       comparison.status(
         "Aligned and saved. Drag the divider or fade between views.",

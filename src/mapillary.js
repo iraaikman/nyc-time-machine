@@ -8,6 +8,30 @@ export const distance = (a, b) => {
   return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 };
 const fields = "id,thumb_2048_url,captured_at,compass_angle,geometry";
+export const angleDifference = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
+export function bearing(a, b) {
+  const rad = Math.PI / 180, delta = (b.lon - a.lon) * rad;
+  const y = Math.sin(delta) * Math.cos(b.lat * rad);
+  const x = Math.cos(a.lat * rad) * Math.sin(b.lat * rad) -
+    Math.sin(a.lat * rad) * Math.cos(b.lat * rad) * Math.cos(delta);
+  return (Math.atan2(y, x) / rad + 360) % 360;
+}
+// The archive pin may locate a subject, not the historic camera. This is a
+// browsing aid only; it cannot establish that two images share a viewpoint.
+export function rankImages(images, photo, direction = "pin") {
+  const score = (image) => {
+    const metres = Number.isFinite(image.distance) ? image.distance : 500;
+    if (direction === "nearest") return metres;
+    if (!Number.isFinite(image.compass_angle)) return 1000 + metres;
+    if (direction === "pin" && !image.geometry?.coordinates) return 1000 + metres;
+    if (direction === "pin" && metres < 8) return 180 + metres;
+    const target = direction === "pin"
+      ? bearing({ lat: image.geometry.coordinates[1], lon: image.geometry.coordinates[0] }, photo)
+      : Number(direction);
+    return angleDifference(image.compass_angle, target) + metres / 10;
+  };
+  return [...images].sort((a, b) => score(a) - score(b) || a.distance - b.distance);
+}
 export async function mapillaryRequest(path, params, token, signal) {
   const url = new URL(`https://graph.mapillary.com/${path}`);
   Object.entries({ ...params, access_token: token }).forEach(([k, v]) =>
@@ -25,9 +49,10 @@ export async function mapillaryRequest(path, params, token, signal) {
   }
   return res.json();
 }
-export async function nearbyImages(photo, token, signal) {
-  // Graph v4 spatial search uses a bounding box. Filter its corners to a true 50 m circle.
-  const dy = 50 / 111320,
+export async function nearbyImages(photo, token, signal, radius = 50) {
+  if (![50, 100, 200].includes(radius)) throw Error("Choose a search radius of 50, 100 or 200 metres.");
+  // Graph v4 spatial search uses a bounding box. Filter its corners to a true circle.
+  const dy = radius / 111320,
     dx = dy / Math.cos((photo.lat * Math.PI) / 180);
   const data = await mapillaryRequest(
     "images",
@@ -45,7 +70,8 @@ export async function nearbyImages(photo, token, signal) {
     signal,
   );
   const images = (data.data || [])
-    .filter((x) => x.geometry?.coordinates && x.thumb_2048_url)
+    .filter((x) => x.geometry?.coordinates?.length === 2 &&
+      x.geometry.coordinates.every(Number.isFinite) && x.thumb_2048_url)
     .map((x) => ({
       ...x,
       distance: distance(photo, {
@@ -53,7 +79,7 @@ export async function nearbyImages(photo, token, signal) {
         lon: x.geometry.coordinates[0],
       }),
     }))
-    .filter((x) => x.distance <= 50);
+    .filter((x) => x.distance <= radius);
   const nearest = [...images].sort((a, b) => a.distance - b.distance)[0];
   images.sort(
     (a, b) =>
